@@ -13,7 +13,8 @@ from frappe.model.document import Document
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 from frappe.utils import cstr, flt, cint, nowdate, add_days, comma_and, now_datetime, ceil
 from erpnext.stock.report.stock_balance.stock_balance import execute
-from erpnext.buying.doctype.purchase_order.purchase_order import make_rm_stock_entry
+# from erpnext.buying.doctype.purchase_order.purchase_order import make_rm_stock_entry
+from erpnext.controllers.subcontracting_controller import make_rm_stock_entry
 from erpnext import get_default_company
 from erpnext.manufacturing.doctype.production_plan.production_plan import get_items_for_material_requests
 from erpnext.stock.doctype.item.item import get_uom_conv_factor
@@ -73,7 +74,7 @@ class DC(Document):
 	def on_cancel(self):
 		self.db_set("docstatus",2)
 		msgprint(_("{0} cancelled").format(comma_and("""<a href="#Form/DC/{0}">{1}</a>""".format(self.name, self.name))))
-		
+
 	def create_purchase_order(self):
 		dc_items = []
 		lot_warehouse = frappe.db.get_value("Warehouse", {
@@ -145,7 +146,7 @@ class DC(Document):
 
 			if item.deliver_later and not item.delivery_location:
 				frappe.throw(_(f'Mention <b> Delivery Location </b> to deliver later for {item.pf_item_code}'))
-	
+
 	def get_dc_item(self):
 		dc_item_list = []
 		for item in self.items:
@@ -163,7 +164,7 @@ class DC(Document):
 				reserver_warehouse = frappe.db.get_value("Warehouse", {
 											'location': item.delivery_location, 'lot': self.lot, 'warehouse_type': "Actual"}, 'name')
 				item_reserve_warehouse_location[item.item_code] = reserver_warehouse
-		
+
 		return item_reserve_warehouse_location
 
 def get_stock_dict(new_po):
@@ -502,7 +503,7 @@ def get_expected_items_in_return(doc, items_to_be_sent=None, use_delivery_qty=Fa
 						in_stock_item_consumable_indexes.append(i)
 					else:
 						frappe.throw(_(f"Items expected in return and delivery have different UOMs"))
-		
+
 		if len(in_stock_item_consumable_indexes) == 0:
 			frappe.throw(_(f"{in_stock_item} is not used to manufacture any of the items. Do no supply it"))
 
@@ -559,7 +560,7 @@ def get_expected_items_in_return(doc, items_to_be_sent=None, use_delivery_qty=Fa
 				item_to_be_received['qty'] = rm['supply_qty']
 			else:
 				item_to_be_received['qty'] = 0
-		
+
 		if frappe.db.get_value('UOM', item.stock_uom, 'must_be_whole_number'):
 			item_to_be_received['qty'] = int(item_to_be_received['qty'])
 		ipd_process_index_of_item = -1
@@ -681,7 +682,7 @@ def get_delivery_qty_from_return_materials(doc):
 			if required_raw_material['item_code'] == delivery_item['item_code'] \
 				and required_raw_material['uom'] == delivery_item['primary_uom']:
 				delivery_item['quantity'] = required_raw_material['quantity']
-	
+
 	return delivery_items
 
 @frappe.whitelist()
@@ -704,7 +705,7 @@ def calculate_expected_qty_from_delivery_qty(doc):
 	for item in doc.get('items'):
 		if not 'quantity' in item or item['quantity'] == 0:
 			frappe.throw(_(f'Enter delivery quantity for {item["item_code"]}'))
-	
+
 	items_to_be_received = get_expected_items_in_return(raw_doc, items_to_be_sent=doc.get('items'), use_delivery_qty=True)
 
 	return_items = doc.get('return_materials')
@@ -776,7 +777,7 @@ def make_entry(doc):
 	items_to_be_received = get_expected_items_in_return(doc, items_to_be_sent=items_to_be_sent, use_delivery_qty=False)
 	size = doc.size
 	colour = doc.colour
-	piece_count = doc.piece_count 
+	piece_count = doc.piece_count
 	ipd = frappe.db.get_value('Lot Creation',{'name': doc.get('lot')},'item_production_detail')
 	process_record_list = frappe.get_list("Item Production Detail Process",{'parent': ipd,'process_name':'Stitching'},'process_record')
 	if len(process_record_list)>1:
@@ -866,7 +867,7 @@ def distribute_item_quantity(doc):
 		combination_list = list(itertools.product(*combination_list))
 		for row in doc['items']:
 			item_doc = frappe.get_doc("Item",row['item_code'])
-			attribute_set = get_item_attribute_set(list(map(lambda x: x.attributes,[item_doc]))) 
+			attribute_set = get_item_attribute_set(list(map(lambda x: x.attributes,[item_doc])))
 			if not('Apparelo Size' in attribute_set and 'Apparelo Colour' in attribute_set \
 				and 'Part' in attribute_set):
 				dc_item.append({"item_code":row['item_code'],"primary_uom":row['primary_uom'],"available_quantity":row['available_quantity'],"pf_item_code":row['pf_item_code'],"secondary_uom":row['secondary_uom'],"quantity":row['quantity']})
