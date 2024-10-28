@@ -12,7 +12,8 @@ from apparelo.apparelo.doctype.ipd_item_mapping.ipd_item_mapping import ipd_item
 from apparelo.apparelo.doctype.ipd_bom_mapping.ipd_bom_mapping import ipd_bom_mapping
 from frappe.utils import comma_and,get_link_to_form
 from collections import Counter
-from frappe.core.page.background_jobs.background_jobs import get_info
+# from frappe.core.page.background_jobs.background_jobs import get_info
+from apparelo.apparelo.patches.erpnext15.background_jobs import get_info
 from frappe.utils.background_jobs import enqueue
 from six import string_types
 
@@ -75,7 +76,7 @@ class ItemProductionDetail(Document):
 							{
 								"attribute" : "Apparelo Size"
 							}
-						]					
+						]
 				else:
 					attribute = [
 							{
@@ -140,7 +141,7 @@ class ItemProductionDetail(Document):
 					"is_sub_contracted_item": "1",
 					"attributes" : attribute
 					}).save()
-				
+
 
 	def validate_process_records(self):
 		count = 0
@@ -325,7 +326,7 @@ class ItemProductionDetail(Document):
 					if process.ipd_name:
 						process_variants,existing_item=get_existing_process_variants(process_variants,ipd,process,cutting_attribute,item_size,colour,piece_count,self.item,final_process)
 						ipd.append(process_variants)
-						existing_item_list.extend(existing_item)					
+						existing_item_list.extend(existing_item)
 					elif process.input_index:
 						input_items_= []
 						variants=[]
