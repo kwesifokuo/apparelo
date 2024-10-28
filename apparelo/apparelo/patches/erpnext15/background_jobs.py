@@ -4,7 +4,8 @@
 from typing import TYPE_CHECKING
 
 import frappe
-from frappe.utils import convert_utc_to_user_timezone
+# from frappe.utils.data import convert_utc_to_user_timezone
+from apparelo.apparelo.patches.erpnext15.data import convert_utc_to_user_timezone
 from frappe.utils.background_jobs import get_queues, get_workers
 from frappe.utils.scheduler import is_scheduler_inactive
 
